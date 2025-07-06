@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Professional action cards carousel with powerful workflow tools">
+    <meta name="keywords" content="workflow, tools, dashboard, productivity">
+    <title>Hero Section with Action Cards</title>
+    <style>
+        /* Reset all default browser styles to ensure consistent appearance across browsers */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box; /* Include padding and border in element's total width/height */
+        }
+
+        /* Main body styling with gradient background and typography setup */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #1f2937; /* Dark gray text color */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Purple gradient background */
+            min-height: 100vh; /* Ensure body takes full viewport height */
+        }
+
+        /* Container for the hero section with centered content */
+        .hero-section {
+            padding: 4rem 2rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto; /* Center the section horizontally */
+            text-align: center;
+        }
+
+        /* Main heading with responsive font sizing using clamp() */
+        .hero-title {
+            font-size: clamp(2.5rem, 5vw, 4rem); /* Responsive: min 2.5rem, max 4rem, scales with viewport */
+            font-weight: 800; /* Extra bold */
+            color: white;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Subtle shadow for depth */
+            letter-spacing: -0.02em; /* Tight letter spacing for modern look */
+        }
+
+        /* Subtitle with responsive sizing and opacity for hierarchy */
+        .hero-subtitle {
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+            font-weight: 400; /* Normal weight */
+            color: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto; /* Center the subtitle text block */
+        }
+
+        /* Main container for the carousel component */
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Wrapper that handles overflow and creates the scrollable area */
+        .carousel-wrapper {
+            overflow: hidden; /* Hide scrollbars on desktop */
+            border-radius: 16px;
+            /* Hardware acceleration for smooth animations */
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+        }
+
+        /* The actual track that contains all the cards and moves horizontally */
+        .carousel-track {
+            display: flex; /* Arrange cards in a row */
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* Smooth easing animation */
+            gap: 1.5rem; /* Space between cards */
+            padding: 2rem;
+            background: transparent;
+            will-change: transform; /* Optimize for transform animations */
+        }
+
+        /* Individual action card styling */
+        .action-card {
+            flex: 0 0 200px; /* Don't grow/shrink, fixed width of 200px */
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            transition: all 0.3s ease; /* Smooth transitions for all properties */
+            cursor: pointer;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden; /* Ensure pseudo-element doesn't overflow */
+        }
+
+        /* Animated top border that appears on hover/focus */
+        .action-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2); /* Gradient border */
+            transform: scaleX(0); /* Start hidden (no width) */
+            transition: transform 0.3s ease;
+        }
+
+        /* Show the top border on hover and focus */
+        .action-card:hover::before,
+        .action-card:focus::before {
+            transform: scaleX(1); /* Expand to full width */
+        }
+
+        /* Hover and focus effects - lift the card and enhance shadow */
+        .action-card:hover,
+        .action-card:focus {
+            transform: translateY(-8px); /* Lift card up */
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15); /* Deeper shadow */
+            border-color: #667eea; /* Colored border */
+        }
+
+        /* Accessibility: visible focus indicator */
+        .action-card:focus {
+            outline: 3px solid #667eea;
+            outline-offset: 2px;
+        }
+
+        /* Active state - slight press effect */
+        .action-card:active {
+            transform: translateY(-4px); /* Less lift than hover */
+        }
+
+        /* Icon container with gradient background */
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 1rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        /* Card title styling */
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600; /* Semi-bold */
+            color: #1f2937; /* Dark gray */
+            margin-bottom: 0.5rem;
+        }
+
+        /* Card description text */
+        .card-description {
+            font-size: 0.85rem;
+            color: #6b7280; /* Lighter gray */
+            line-height: 1.5;
+        }
+
+        /* Screen reader only class - content invisible but accessible */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* MOBILE RESPONSIVE STYLES */
+        /* Tablet and small desktop styles */
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 2rem 1rem; /* Reduce padding on smaller screens */
+            }
+
+            /* Enable horizontal scrolling on mobile */
+            .carousel-wrapper {
+                overflow-x: auto; /* Allow horizontal scrolling */
+                overflow-y: hidden; /* Prevent vertical scrolling */
+                scroll-behavior: smooth; /* Smooth scrolling */
+                -webkit-overflow-scrolling: touch; /* iOS momentum scrolling */
+                scrollbar-width: none; /* Hide scrollbar on Firefox */
+                -ms-overflow-style: none; /* Hide scrollbar on IE/Edge */
+                scroll-snap-type: x mandatory; /* Snap to cards when scrolling */
+                /* Hardware acceleration for smooth scrolling */
+                transform: translateZ(0);
+                -webkit-transform: translateZ(0);
+            }
+
+            /* Hide scrollbar on WebKit browsers (Chrome, Safari) */
+            .carousel-wrapper::-webkit-scrollbar {
+                display: none;
+            }
+
+            /* Adjust track for mobile scrolling */
+            .carousel-track {
+                padding: 1.5rem;
+                width: max-content; /* Width based on content, not container */
+            }
+
+            /* Smaller cards on mobile */
+            .action-card {
+                flex: 0 0 180px; /* Fixed width of 180px */
+                padding: 1.25rem;
+                scroll-snap-align: start; /* Snap to start of each card */
+            }
+        }
+
+        /* Small mobile phone styles */
+        @media (max-width: 480px) {
+            /* Even smaller cards for small screens */
+            .action-card {
+                flex: 0 0 160px; /* Fixed width of 160px */
+                padding: 1rem;
+                scroll-snap-align: start;
+            }
+
+            /* Adjust icon size */
+            .card-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 1.1rem;
+            }
+
+            /* Smaller text on mobile */
+            .card-title {
+                font-size: 0.9rem;
+            }
+
+            .card-description {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main content area -->
+    <main class="hero-section">
+        <!-- Page heading -->
+        <h1 class="hero-title">Powerful Actions at Your Fingertips</h1>
+        <h2 class="hero-subtitle">Streamline your workflow with our comprehensive suite of professional tools and features</h2>
+        
+        <!-- Carousel component structure -->
+        <div class="carousel-container">
+            <!-- Scrollable wrapper -->
+            <div class="carousel-wrapper" id="carouselWrapper">
+                <!-- Track containing all cards -->
+                <div class="carousel-track" id="carouselTrack" role="region" aria-label="Action cards carousel" tabindex="0" dir="ltr">
+                    
+                    <!-- ACTION CARDS - Each card represents a different tool/feature -->
+                    
+                    <!-- Analytics Dashboard Card -->
+                    <div class="action-card" tabindex="0" role="button" aria-label="Analytics Dashboard" onclick="handleCardClick('analytics')">
+                        <div class="card-icon">📊</div>
+                        <h3 class="card-title">Analytics Dashboard</h3>
+                        <p class="card-description">View comprehensive insights and performance metrics</p>
+                    </div>
+                    
+                    <!-- Team Management Card -->
+                    <div class="action-card" tabindex="0" role="button" aria-label="Team Management" onclick="handleCardClick('team')">
+                        <div class="card-icon">👥</div>
+                        <h3 class="card-title">Team Management</h3>
+                        <p class="card-description">Organize and manage your team members effectively</p>
+                    </div>
+                    
+                    <!-- Project Planning Card -->
+                    <div class="action-card" tabindex="0" role="button" aria-label="Project Planning" onclick="handleCardClick('projects')">
+                        <div class="card-icon">🎯</div>
+                        <h3 class="card-title">Project Planning</h3>
+                        <p class="card-description">Plan and track your projects from start to finish</p>
+                    </div>
+                    
+                    <!-- File Storage Card -->
+                    <div class="action-card" tabindex="0" role="button" aria-label="File Storage" onclick="handleCardClick('files')">
+                        <div class="card-icon">📁</div>
+                        <h3 class="card-title">File Storage</h3>
+                        <p class="card-description">Secure cloud storage for all your important documents</p>
+                    </div>
+                    
+                    <!-- Communication Hub Card -->
+                    <div class="action-card" tabindex="0" role="button" aria-label="Communication Hub" onclick="handleCardClick('communication')">
+                        <div class="card-icon">💬</div>
+                        <h3 class="card-title">Communication Hub</h3>
+                        <p class="card-description">Centralized messaging and collaboration tools</p>
+                    </div>
+                    
+                    <!-- Time Tracking Card -->
+                    <div class="action-card" tabindex="0" role="button" aria-label="Time Tracking" onclick="handleCardClick('time')">
+                        <div class="card-icon">⏱️</div>
+                        <h3 class="card-title">Time Tracking</h3>
+                        <p class="card-description">Monitor time spent on tasks and projects</p>
+                    </div>
+                    
+                    <!-- Resource Library Card -->
+                    <div class="action-card" tabindex="0" role="button" aria-label="Resource Library" onclick="handleCardClick('resources')">
+                        <div class="card-icon">📚</div>
+                        <h3 class="card-title">Resource Library</h3>
+                        <p class="card-description">Access templates, guides, and learning materials</p>
+                    </div>
+                    
+                    <!-- Customer Support Card -->
+                    <div class="action-card" tabindex="0" role="button" aria-label="Customer Support" onclick="handleCardClick('support')">
+                        <div class="card-icon">🎧</div>
+                        <h3 class="card-title">Customer Support</h3>
+                        <p class="card-description">Get help when you need it most</p>
+                    </div>
+                    
+                    <!-- Settings & Preferences Card -->
+                    <div class="action-card" tabindex="0" role="button" aria-label="Settings & Preferences" onclick="handleCardClick('settings')">
+                        <div class="card-icon">⚙️</div>
+                        <h3 class="card-title">Settings & Preferences</h3>
+                        <p class="card-description">Customize your experience and preferences</p>
+                    </div>
+                    
+                    <!-- Billing & Payments Card -->
+                    <div class="action-card" tabindex="0" role="button" aria-label="Billing & Payments" onclick="handleCardClick('billing')">
+                        <div class="card-icon">💳</div>
+                        <h3 class="card-title">Billing & Payments</h3>
+                        <p class="card-description">Manage your subscription and payment methods</p>
+                    </div>
+                    
+                    <!-- Integrations Card -->
+                    <div class="action-card" tabindex="0" role="button" aria-label="Integrations" onclick="handleCardClick('integrations')">
+                        <div class="card-icon">🔗</div>
+                        <h3 class="card-title">Integrations</h3>
+                        <p class="card-description">Connect with your favorite apps and services</p>
+                    </div>
+                    
+                    <!-- Security Center Card -->
+                    <div class="action-card" tabindex="0" role="button" aria-label="Security Center" onclick="handleCardClick('security')">
+                        <div class="card-icon">🔒</div>
+                        <h3 class="card-title">Security Center</h3>
+                        <p class="card-description">Manage your account security and permissions</p>
+                    </div>
+                    
+                    <!-- Reports & Export Card -->
+                    <div class="action-card" tabindex="0" role="button" aria-label="Reports & Export" onclick="handleCardClick('reports')">
+                        <div class="card-icon">📈</div>
+                        <h3 class="card-title">Reports & Export</h3>
+                        <p class="card-description">Generate detailed reports and export data</p>
+                    </div>
+                    
+                    <!-- API & Webhooks Card -->
+                    <div class="action-card" tabindex="0" role="button" aria-label="API & Webhooks" onclick="handleCardClick('api')">
+                        <div class="card-icon">🔧</div>
+                        <h3 class="card-title">API & Webhooks</h3>
+                        <p class="card-description">Developer tools and API management</p>
+                    </div>
+                    
+                    <!-- Mobile App Card -->
+                    <div class="action-card" tabindex="0" role="button" aria-label="Mobile App" onclick="handleCardClick('mobile')">
+                        <div class="card-icon">📱</div>
+                        <h3 class="card-title">Mobile App</h3>
+                        <p class="card-description">Download our mobile app for on-the-go access</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // MAIN JAVASCRIPT FUNCTIONALITY
+        // Wait for DOM to be fully loaded before executing scripts
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get references to key carousel elements
+            const carouselWrapper = document.getElementById('carouselWrapper');
+            const carouselTrack = document.getElementById('carouselTrack');
+            const cards = document.querySelectorAll('.action-card');
+            
+            // ACCESSIBILITY FEATURES
+            // Add scroll position announcement for screen readers
+            let scrollTimeout;
+            carouselWrapper.addEventListener('scroll', () => {
+                // Debounce scroll events to avoid excessive announcements
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    announceScrollPosition();
+                }, 150);
+            });
+            
+            /**
+             * Announces current scroll position to screen readers
+             * Calculates which card is currently visible and announces it
+             */
+            function announceScrollPosition() {
+                const scrollLeft = carouselWrapper.scrollLeft;
+                const cardWidth = getCardWidth();
+                const currentCard = Math.round(scrollLeft / cardWidth) + 1;
+                const totalCards = cards.length;
+                
+                // Create or update live region for screen reader announcements
+                let liveRegion = document.getElementById('carousel-live-region');
+                if (!liveRegion) {
+                    liveRegion = document.createElement('div');
+                    liveRegion.id = 'carousel-live-region';
+                    liveRegion.className = 'sr-only';
+                    liveRegion.setAttribute('aria-live', 'polite'); // Announce when convenient
+                    liveRegion.setAttribute('aria-atomic', 'true'); // Read entire content
+                    document.body.appendChild(liveRegion);
+                }
+                liveRegion.textContent = `Viewing card ${Math.min(currentCard, totalCards)} of ${totalCards}`;
+            }
+            
+            /**
+             * Calculate card width including gap based on screen size
+             * Used for scroll calculations and keyboard navigation
+             */
+            function getCardWidth() {
+                if (window.innerWidth <= 480) return 160 + 24; // mobile card width + gap
+                if (window.innerWidth <= 768) return 180 + 24; // tablet card width + gap
+                return 200 + 24; // desktop card width + gap
+            }
+            
+            // KEYBOARD NAVIGATION
+            // Add keyboard support for carousel navigation
+            carouselTrack.addEventListener('keydown', (e) => {
+                const cardWidth = getCardWidth();
+                const currentScroll = carouselWrapper.scrollLeft;
+                const maxScroll = carouselWrapper.scrollWidth - carouselWrapper.clientWidth;
+                
+                if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    // Scroll left by one card width
+                    const targetScroll = Math.max(0, currentScroll - cardWidth);
+                    smoothScrollTo(carouselWrapper, targetScroll, 350);
+                } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    // Scroll right by one card width
+                    const targetScroll = Math.min(maxScroll, currentScroll + cardWidth);
+                    smoothScrollTo(carouselWrapper, targetScroll, 350);
+                }
+            });
+            
+            /**
+             * Custom smooth scroll implementation for fluid animations
+             * Uses requestAnimationFrame for 60fps smooth scrolling
+             * @param {Element} element - Element to scroll
+             * @param {number} target - Target scroll position
+             * @param {number} duration - Animation duration in milliseconds
+             */
+            function smoothScrollTo(element, target, duration = 300) {
+                const start = element.scrollLeft;
+                const change = target - start;
+                const startTime = performance.now();
+                
+                function animateScroll(currentTime) {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    // Ultra-smooth easing function (cubic-bezier equivalent)
+                    const easeInOutCubic = progress < 0.5 
+                        ? 4 * progress * progress * progress 
+                        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+                    
+                    element.scrollLeft = start + (change * easeInOutCubic);
+                    
+                    // Continue animation if not complete
+                    if (progress < 1) {
+                        requestAnimationFrame(animateScroll);
+                    }
+                }
+                
+                requestAnimationFrame(animateScroll);
+            }
+            
+            // MOMENTUM SCROLLING FOR TOUCH DEVICES
+            // Track momentum for smooth deceleration after touch ends
+            let momentum = {
+                lastTime: 0,
+                lastPosition: 0,
+                velocity: 0,
+                isDecelerating: false
+            };
+            
+            /**
+             * Update momentum tracking based on scroll position and time
+             * Calculates velocity for momentum scrolling
+             */
+            function updateMomentum(currentPosition, currentTime) {
+                if (momentum.lastTime > 0) {
+                    const timeDelta = currentTime - momentum.lastTime;
+                    const positionDelta = currentPosition - momentum.lastPosition;
+                    momentum.velocity = positionDelta / timeDelta;
+                }
+                momentum.lastTime = currentTime;
+                momentum.lastPosition = currentPosition;
+            }
+            
+            /**
+             * Apply momentum scrolling for natural deceleration
+             * Continues scrolling with decreasing velocity after touch ends
+             */
+            function applyMomentum(element) {
+                // Stop if velocity is too low
+                if (Math.abs(momentum.velocity) < 0.1) {
+                    momentum.isDecelerating = false;
+                    return;
+                }
+                
+                const currentScroll = element.scrollLeft;
+                const targetScroll = currentScroll + (momentum.velocity * 16); // 16ms frame time
+                const maxScroll = element.scrollWidth - element.clientWidth;
+                const clampedTarget = Math.max(0, Math.min(maxScroll, targetScroll));
+                
+                element.scrollLeft = clampedTarget;
+                momentum.velocity *= 0.95; // Deceleration factor
+                
+                // Continue momentum if still decelerating
+                if (momentum.isDecelerating) {
+                    requestAnimationFrame(() => applyMomentum(element));
+                }
+            }
+            
+            // TOUCH/SWIPE SUPPORT
+            // Variables for touch gesture tracking
+            let startX = 0;
+            let startY = 0;
+            let isDragging = false;
+            let touchStartTime = 0;
+            
+            // Touch start - record initial position and time
+            carouselWrapper.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                isDragging = false;
+                touchStartTime = performance.now();
+                momentum.isDecelerating = false;
+                updateMomentum(carouselWrapper.scrollLeft, touchStartTime);
+            }, { passive: true });
+            
+            // Touch move - detect horizontal swipes and prevent vertical scrolling
+            carouselWrapper.addEventListener('touchmove', (e) => {
+                if (!startX || !startY) return;
+                
+                const currentX = e.touches[0].clientX;
+                const currentY = e.touches[0].clientY;
+                const diffX = startX - currentX;
+                const diffY = startY - currentY;
+                
+                // If horizontal movement is greater than vertical, start dragging
+                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
+                    isDragging = true;
+                    e.preventDefault(); // Prevent page scrolling
+                    updateMomentum(carouselWrapper.scrollLeft, performance.now());
+                }
+            });
+            
+            // Touch end - handle swipe gestures and momentum
+            carouselWrapper.addEventListener('touchend', (e) => {
+                if (!isDragging) return;
+                
+                const currentX = e.changedTouches[0].clientX;
+                const diffX = startX - currentX;
+                const touchDuration = performance.now() - touchStartTime;
+                const cardWidth = getCardWidth();
+                const currentScroll = carouselWrapper.scrollLeft;
+                const maxScroll = carouselWrapper.scrollWidth - carouselWrapper.clientWidth;
+                
+                // Detect quick swipes vs slow swipes
+                const isQuickSwipe = touchDuration < 300 && Math.abs(diffX) > 50;
+                const isSlowSwipe = Math.abs(diffX) > 80;
+                
+                if (isQuickSwipe || isSlowSwipe) {
+                    if (diffX > 0) {
+                        // Swipe left - scroll right (show next cards)
+                        const targetScroll = Math.min(maxScroll, currentScroll + cardWidth);
+                        smoothScrollTo(carouselWrapper, targetScroll, 400);
+                    } else {
+                        // Swipe right - scroll left (show previous cards)
+                        const targetScroll = Math.max(0, currentScroll - cardWidth);
+                        smoothScrollTo(carouselWrapper, targetScroll, 400);
+                    }
+                } else if (Math.abs(momentum.velocity) > 0.5) {
+                    // Apply momentum scrolling for fluid continuation
+                    momentum.isDecelerating = true;
+                    applyMomentum(carouselWrapper);
+                }
+                
+                // Reset touch tracking variables
+                startX = 0;
+                startY = 0;
+                isDragging = false;
+            }, { passive: true });
+            
+            // MOUSE WHEEL SUPPORT
+            // Enhanced mouse wheel support with fluid scrolling
+            let wheelTimeout;
+            carouselWrapper.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                
+                const currentScroll = carouselWrapper.scrollLeft;
+                const scrollDelta = e.deltaX !== 0 ? e.deltaX : e.deltaY;
+                const targetScroll = currentScroll + (scrollDelta * 1.2);
+                const maxScroll = carouselWrapper.scrollWidth - carouselWrapper.clientWidth;
+                const clampedTarget = Math.max(0, Math.min(maxScroll, targetScroll));
+                
+                // Clear previous timeout
+                clearTimeout(wheelTimeout);
+                
+                // Smooth wheel scrolling
+                smoothScrollTo(carouselWrapper, clampedTarget, 200);
+                
+                // Add momentum-like continuation after wheel stops
+                wheelTimeout = setTimeout(() => {
+                    const cardWidth = getCardWidth();
+                    const nearestCard = Math.round(carouselWrapper.scrollLeft / cardWidth) * cardWidth;
+                    const maxCardScroll = Math.floor(maxScroll / cardWidth) * cardWidth;
+                    const finalTarget = Math.max(0, Math.min(maxCardScroll, nearestCard));
+                    
+                    // Snap to nearest card if not already aligned
+                    if (Math.abs(carouselWrapper.scrollLeft - finalTarget) > 5) {
+                        smoothScrollTo(carouselWrapper, finalTarget, 300);
+                    }
+                }, 150);
+                
+            }, { passive: false });
+            
+            // CARD KEYBOARD NAVIGATION
+            // Add keyboard support for individual cards
+            cards.forEach(card => {
+                card.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        card.click(); // Trigger click event
+                    }
+                });
+            });
+            
+            // Initialize scroll position announcement after DOM loads
+            setTimeout(announceScrollPosition, 100);
+        });
+        
+        /**
+         * Handle card click events - routing function for different actions
+         * @param {string} action - The action identifier from the clicked card
+         */
+        function handleCardClick(action) {
+            console.log(`Action clicked: ${action}`);
+            
+            // Route to different pages or trigger actions based on the action type
+            // Currently shows alerts, but in a real app would navigate to pages
+            switch(action) {
+                case 'analytics':
+                    // In production: window.location.href = '/analytics';
+                    alert('Navigating to Analytics Dashboard...');
+                    break;
+                case 'team':
+                    // In production: window.location.href = '/team';
+                    alert('Opening Team Management...');
+                    break;
+                case 'projects':
+                    // In production: window.location.href = '/projects';
+                    alert('Loading Project Planning...');
+                    break;
+                case 'files':
+                    // In production: window.location.href = '/files';
+                    alert('Accessing File Storage...');
+                    break;
+                case 'communication':
+                    // In production: window.location.href = '/chat';
+                    alert('Opening Communication Hub...');
+                    break;
+                case 'time':
+                    // In production: window.location.href = '/time-tracking';
+                    alert('Starting Time Tracking...');
+                    break;
+                case 'resources':
+                    // In production: window.location.href = '/resources';
+                    alert('Loading Resource Library...');
+                    break;
+                case 'support':
+                    // In production: window.location.href = '/support';
+                    alert('Connecting to Customer Support...');
+                    break;
+                case 'settings':
+                    // In production: window.location.href = '/settings';
+                    alert('Opening Settings...');
+                    break;
+                case 'billing':
+                    // In production: window.location.href = '/billing';
+                    alert('Loading Billing & Payments...');
+                    break;
+                case 'integrations':
+                    // In production: window.location.href = '/integrations';
+                    alert('Managing Integrations...');
+                    break;
+                case 'security':
+                    // In production: window.location.href = '/security';
+                    alert('Accessing Security Center...');
+                    break;
+                case 'reports':
+                    // In production: window.location.href = '/reports';
+                    alert('Generating Reports...');
+                    break;
+                case 'api':
+                    // In production: window.location.href = '/api';
+                    alert('Opening API & Webhooks...');
+                    break;
+                case 'mobile':
+                    // In production: window.open('https://apps.apple.com/your-app', '_blank');
+                    alert('Redirecting to App Store...');
+                    break;
+                default:
+                    alert(`Action: ${action}`);
+            }
+        }
+    </script>
+</body>
+</html>
